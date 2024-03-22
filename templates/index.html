@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid of Squares</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .square {
+            width: 20px;
+            height: 20px;
+            border: 1px solid black;
+            display: inline-block;
+            margin-right: 0.5em;
+        }
+        .on {
+            background-color: black;
+        }
+        .input-container {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .input-container label {
+            margin-right: 10px;
+        }
+        #grid {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Grid of Squares</h1>
+    <div class="input-container">
+        <label for="rows">Rows:</label>
+        <input type="number" id="rows" min="4" max="128" value="8">
+        <label for="columns">Columns:</label>
+        <input type="number" id="columns" min="4" max="64" value="16">
+        <button onclick="applyChanges()">Apply</button>
+    </div>
+    <div class="input-container">
+        <input type="radio" id="toggleMode" name="drawingMode" value="toggle" checked>
+        <label for="toggleMode">Toggle</label>
+        <input type="radio" id="drawMode" name="drawingMode" value="draw">
+        <label for="drawMode">Draw</label>
+        <input type="radio" id="eraseMode" name="drawingMode" value="erase">
+        <label for="eraseMode">Erase</label>
+    </div>
+    <div id="grid">
+        {% for row in range(8) %}
+            {% for col in range(16) %}
+                <div class="square" id="{{ row }}-{{ col }}" onmousedown="drawSquare(event)"></div>
+            {% endfor %}
+            <br>
+        {% endfor %}
+    </div>
+    <script>
+        var drawingMode = 'toggle';
+        var gridDiv = document.getElementById('grid');
+        var isDrawing = false;
+
+        function applyChanges() {
+            var rows = document.getElementById('rows').value;
+            var columns = document.getElementById('columns').value;
+            
+            if (isNaN(rows) || isNaN(columns) || rows < 4 || columns < 4 || rows > 128 || columns > 64) {
+                alert('Please enter valid values for rows and columns.');
+                return;
+            }
+            
+            gridDiv.innerHTML = '';
+            
+            for (var i = 0; i < rows; i++) {
+                for (var j = 0; j < columns; j++) {
+                    var square = document.createElement('div');
+                    square.className = 'square';
+                    square.id = i + '-' + j;
+                    square.addEventListener('mousedown', function(event) {
+                        event.preventDefault(); // prevent default dragging behavior
+                        isDrawing = true;
+                        drawSquare(event.target);
+                    });
+                    square.addEventListener('mousemove', function(event) {
+                        if (isDrawing && (drawingMode != 'toggle')) {
+                            drawSquare(event.target);
+                        }
+                    });
+                    gridDiv.appendChild(square);
+                }
+                var lineBreak = document.createElement('br');
+                gridDiv.appendChild(lineBreak);
+            }
+        }
+
+        function drawSquare(square) {
+            switch (drawingMode) {
+                case 'toggle':
+                    square.classList.toggle('on');
+                    break;
+                case 'draw':
+                    square.classList.add('on');
+                    break;
+                case 'erase':
+                    square.classList.remove('on');
+                    break;
+            }
+        }
+        
+        document.addEventListener('mouseup', function() {
+            isDrawing = false;
+        });
+
+        document.querySelectorAll('input[name="drawingMode"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                drawingMode = this.value;
+            });
+        });
+        
+        // Call applyChanges when the page loads
+        window.addEventListener('load', applyChanges);
+    </script>
+</body>
+</html>
