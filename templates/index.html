@@ -14,11 +14,11 @@
             margin: 0;
         }
         .square {
-            width: 20px;
-            height: 20px;
+            width: 10px;
+            height: 10px;
             border: 1px solid black;
             display: inline-block;
-            margin-right: 0.5em;
+            margin: 1px 0 1px 1px;
         }
         .on {
             background-color: black;
@@ -32,6 +32,17 @@
         }
         #grid {
             text-align: center;
+            line-height: 1%;        /* force using square margin to set spacing */
+        }
+        .row-index {
+            width: 20px;
+            text-align: right;
+            margin-right: 1px; /* Adjust margin for spacing */
+        }
+        .column-index {
+            width: 20px;
+            text-align: center;
+            margin-bottom: 1px; /* Adjust margin for spacing */
         }
     </style>
 </head>
@@ -39,9 +50,9 @@
     <h1>Grid of Squares</h1>
     <div class="input-container">
         <label for="rows">Rows:</label>
-        <input type="number" id="rows" min="4" max="128" value="8">
+        <input type="number" id="rows" min="4" max="64" value="8">
         <label for="columns">Columns:</label>
-        <input type="number" id="columns" min="4" max="64" value="16">
+        <input type="number" id="columns" min="4" max="128" value="16">
         <button onclick="applyChanges()">Apply</button>
     </div>
     <div class="input-container">
@@ -53,12 +64,7 @@
         <label for="eraseMode">Erase</label>
     </div>
     <div id="grid">
-        {% for row in range(8) %}
-            {% for col in range(16) %}
-                <div class="square" id="{{ row }}-{{ col }}" onmousedown="drawSquare(event)"></div>
-            {% endfor %}
-            <br>
-        {% endfor %}
+        <!-- Squares will be inserted dynamically here -->
     </div>
     <script>
         var drawingMode = 'toggle';
@@ -69,7 +75,7 @@
             var rows = document.getElementById('rows').value;
             var columns = document.getElementById('columns').value;
             
-            if (isNaN(rows) || isNaN(columns) || rows < 4 || columns < 4 || rows > 128 || columns > 64) {
+            if (isNaN(rows) || isNaN(columns) || rows < 4 || columns < 4 || rows > 64 || columns > 128) {
                 alert('Please enter valid values for rows and columns.');
                 return;
             }
