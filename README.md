@@ -1,6 +1,8 @@
 # gfx-pixel-creator
 Create bitmaps for monochrome OLED/LC displays
 
+![Screenshot](./images/screenshot_v1.png)
+
 The code for this project was generated primarily from ChatGPT 3.5 (chat.openai.com). The prompts consisted of descriptions of the desired layout, labels, and actions. It went through several rounds of refinement to 
 * adjust the visual layout 
 * add new functionality (e.g. change the size of the grid, add a draw & erase mode)
@@ -12,3 +14,7 @@ Second pass: adding row/column index labels and export
 * did not get correct code from GPT for creating divs with the correct alignment and sizing, required a fair bit of guess and test
 * export to C code worked the first time
 
+## Inspiration / References
+* Adafruit monochrome OLED displays: https://learn.adafruit.com/monochrome-oled-breakouts/overview
+  * The old LCD assistant: http://en.radzio.dxp.pl/bitmap_converter/
+* Stick it in a container: https://youtu.be/cw34KMPSt4k
