@@ -7,3 +7,8 @@ The code for this project was generated primarily from ChatGPT 3.5 (chat.openai.
 * correct the behaviour of specific actions
 
 The prompts contained some domain-specific knowledge (e.g. details about mouse states and events; references to specific divs), but generally focused on what was perceived to be wrong with the behaviour and clarifying the desired outcomes.
+
+Second pass: adding row/column index labels and export
+* did not get correct code from GPT for creating divs with the correct alignment and sizing, required a fair bit of guess and test
+* export to C code worked the first time
+

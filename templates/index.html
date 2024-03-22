@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid of Squares</title>
+    <title>GFX Pixelator</title>
     <style>
         body {
             display: flex;
@@ -16,12 +16,13 @@
         .square {
             width: 10px;
             height: 10px;
-            border: 1px solid black;
+            border: 1px solid rgb(64, 64, 64);
             display: inline-block;
             margin: 1px 0 1px 1px;
+            background-color: black;
         }
         .on {
-            background-color: black;
+            background-color: white;
         }
         .input-container {
             margin-bottom: 10px;
@@ -34,20 +35,31 @@
             text-align: center;
             line-height: 1%;        /* force using square margin to set spacing */
         }
+        .row {
+            display: flex;
+        }
         .row-index {
-            width: 20px;
-            text-align: right;
-            margin-right: 1px; /* Adjust margin for spacing */
+            width: 12px;
+            height: 12px;
+            margin: 1px 0 1px 1px;
+            text-align: center;
+            line-height: normal;
+            font-size: x-small;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .column-index {
-            width: 20px;
+            width: 12px;
+            height: 12px;
             text-align: center;
-            margin-bottom: 1px; /* Adjust margin for spacing */
+            margin: 1px 0 1px 1px;
+            line-height: normal;
+            font-size: x-small;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
     </style>
 </head>
 <body>
-    <h1>Grid of Squares</h1>
+    <h1>GFX Pixelator</h1>
     <div class="input-container">
         <label for="rows">Rows:</label>
         <input type="number" id="rows" min="4" max="64" value="8">
@@ -66,14 +78,15 @@
     <div id="grid">
         <!-- Squares will be inserted dynamically here -->
     </div>
+    <button onclick="exportGrid()">Export</button>
     <script>
         var drawingMode = 'toggle';
         var gridDiv = document.getElementById('grid');
         var isDrawing = false;
 
         function applyChanges() {
-            var rows = document.getElementById('rows').value;
-            var columns = document.getElementById('columns').value;
+            var rows = parseInt(document.getElementById('rows').value);
+            var columns = parseInt(document.getElementById('columns').value);
             
             if (isNaN(rows) || isNaN(columns) || rows < 4 || columns < 4 || rows > 64 || columns > 128) {
                 alert('Please enter valid values for rows and columns.');
@@ -81,8 +94,30 @@
             }
             
             gridDiv.innerHTML = '';
-            
+
+            var rowZeroDiv = document.createElement('div');
+            rowZeroDiv.className = 'row';
+            var blankDiv = document.createElement('div');
+            blankDiv.className = 'column-index';
+            blankDiv.textContent = 'X';
+            rowZeroDiv.appendChild(blankDiv);
+            for (var j = 0; j < columns; j++) {
+                var columnNumberDiv = document.createElement('div');
+                columnNumberDiv.className = 'column-index';
+                columnNumberDiv.textContent = j % 10;
+                rowZeroDiv.appendChild(columnNumberDiv);
+            }
+            gridDiv.append(rowZeroDiv);
+
             for (var i = 0; i < rows; i++) {
+                var rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+
+                var rowNumberDiv = document.createElement('div');
+                rowNumberDiv.className = 'row-index';
+                rowNumberDiv.textContent = i;
+                rowDiv.appendChild(rowNumberDiv);
+
                 for (var j = 0; j < columns; j++) {
                     var square = document.createElement('div');
                     square.className = 'square';
@@ -97,10 +132,9 @@
                             drawSquare(event.target);
                         }
                     });
-                    gridDiv.appendChild(square);
+                    rowDiv.appendChild(square);
                 }
-                var lineBreak = document.createElement('br');
-                gridDiv.appendChild(lineBreak);
+                gridDiv.appendChild(rowDiv);
             }
         }
 
@@ -116,6 +150,54 @@
                     square.classList.remove('on');
                     break;
             }
+        }
+
+        function exportGrid() {
+            var squares = document.querySelectorAll('.square');
+            var rows = parseInt(document.getElementById('rows').value);
+            var columns = parseInt(document.getElementById('columns').value);
+            var byteArray = [];
+            var byte = 0;
+            var bitIndex = 0;
+
+            // Iterate over each square
+            for (var i = 0; i < squares.length; i++) {
+                var square = squares[i];
+                var color = square.classList.contains('on') ? 1 : 0; // 0 for black, 1 for white
+                byte |= color << bitIndex; // Set the bit in the byte
+
+                bitIndex++;
+                if (bitIndex === 8) {
+                    byteArray.push(byte); // Push the completed byte to the array
+                    byte = 0;
+                    bitIndex = 0;
+                }
+            }
+
+            // Pad the last byte with zeros if necessary
+            if (bitIndex > 0) {
+                byteArray.push(byte);
+            }
+
+            // Generate the C array
+            var cArray = 'unsigned char bitmap[] = {\n';
+            for (var j = 0; j < byteArray.length; j++) {
+                cArray += '0x' + byteArray[j].toString(16).padStart(2, '0');
+                cArray += j < byteArray.length - 1 ? ',' : '';
+                cArray += '\n';
+            }
+            cArray += '};\n\n';
+            cArray += 'const int rows = ' + rows + ';\n';
+            cArray += 'const int columns = ' + columns + ';';
+
+            // Create a Blob containing the array data
+            var blob = new Blob([cArray], { type: 'text/plain' });
+
+            // Create a link element to trigger the download
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'grid_data.txt';
+            link.click();
         }
         
         document.addEventListener('mouseup', function() {
