@@ -1,0 +1,10 @@
+version: '3.4'
+
+services:
+  gfxpixelcreator:
+    image: gfxpixelcreator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8098:8098
