@@ -56,6 +56,18 @@
             font-size: x-small;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        .export-button {
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue background color */
+            color: #fff; /* White text color */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .export-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
     </style>
 </head>
 <body>
@@ -78,7 +90,15 @@
     <div id="grid">
         <!-- Squares will be inserted dynamically here -->
     </div>
-    <button onclick="exportGrid()">Export</button>
+    <div class="input-container">
+        <label for="arrayName">Array Name:</label>
+        <input type="text" id="arrayName" value="bitmap">
+        <button onclick="exportGrid()">Export</button>
+        <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    </div>
+    
+    <br>
+    <a href="https://github.com/xdylanm/gfx-pixel-creator">github</a>
     <script>
         var drawingMode = 'toggle';
         var gridDiv = document.getElementById('grid');
@@ -152,43 +172,57 @@
             }
         }
 
-        function exportGrid() {
+        function buildArray(arrayName) {
             var squares = document.querySelectorAll('.square');
             var rows = parseInt(document.getElementById('rows').value);
             var columns = parseInt(document.getElementById('columns').value);
             var byteArray = [];
-            var byte = 0;
-            var bitIndex = 0;
 
-            // Iterate over each square
-            for (var i = 0; i < squares.length; i++) {
-                var square = squares[i];
-                var color = square.classList.contains('on') ? 1 : 0; // 0 for black, 1 for white
-                byte |= color << bitIndex; // Set the bit in the byte
+            // Iterate over each row
+            for (var i = 0; i < rows; i++) {
+                var byte = 0;
+                var bitIndex = 7;
 
-                bitIndex++;
-                if (bitIndex === 8) {
-                    byteArray.push(byte); // Push the completed byte to the array
-                    byte = 0;
-                    bitIndex = 0;
+                // Iterate over each column in the row
+                for (var j = 0; j < columns; j++) {
+                    var squareIndex = i * columns + j;
+                    var square = squares[squareIndex];
+                    var color = square.classList.contains('on') ? 1 : 0; // 0 for black, 1 for white
+                    byte |= color << bitIndex; // Set the bit in the byte
+
+                    bitIndex--;
+                    if (bitIndex < 0) {
+                        byteArray.push(byte); // Push the completed byte to the array
+                        byte = 0;
+                        bitIndex = 7;
+                    }
+                }
+
+                // Pad the last byte with zeros if necessary
+                if (bitIndex >= 0) {
+                    byteArray.push(byte);
                 }
             }
 
-            // Pad the last byte with zeros if necessary
-            if (bitIndex > 0) {
-                byteArray.push(byte);
-            }
-
             // Generate the C array
-            var cArray = 'unsigned char bitmap[] = {\n';
-            for (var j = 0; j < byteArray.length; j++) {
-                cArray += '0x' + byteArray[j].toString(16).padStart(2, '0');
-                cArray += j < byteArray.length - 1 ? ',' : '';
-                cArray += '\n';
+            var cArray = 'unsigned char ' + arrayName + '[] = {';
+            for (var k = 0; k < byteArray.length; k++) {
+                if (k % 8 == 0) {
+                    cArray += '\n    ';
+                }
+                cArray += '0x' + byteArray[k].toString(16).padStart(2, '0');
+                cArray += k < byteArray.length - 1 ? ', ' : '';
             }
             cArray += '};\n\n';
-            cArray += 'const int rows = ' + rows + ';\n';
-            cArray += 'const int columns = ' + columns + ';';
+            cArray += 'const int ' + arrayName + '_rows = ' + rows + ';\n';
+            cArray += 'const int ' + arrayName + '_columns = ' + columns + ';';
+
+            return cArray;
+        }
+
+        function exportGrid() {
+            var arrayName = document.getElementById('arrayName').value;
+            var cArray = buildArray(arrayName);
 
             // Create a Blob containing the array data
             var blob = new Blob([cArray], { type: 'text/plain' });
@@ -196,8 +230,18 @@
             // Create a link element to trigger the download
             var link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'grid_data.txt';
+            link.download = arrayName + '_data.txt';
             link.click();
+        }
+
+        function copyToClipboard() {
+            var arrayName = document.getElementById('arrayName').value;
+            var cArray = buildArray(arrayName);
+            navigator.clipboard.writeText(cArray).then(function() {
+                alert('Copied to clipboard!');
+            }, function(err) {
+                console.error('Failed to copy: ', err);
+            });
         }
         
         document.addEventListener('mouseup', function() {
